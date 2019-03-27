@@ -20,8 +20,6 @@ import (
 
 const audience = "factors"
 
-// const audience = "vault"
-
 type ExampleResponse struct {
 	Error   error
 	Factors []int64
@@ -107,15 +105,10 @@ func validateToken(svcToken, bearerToken string) bool {
 	// Read Response Body
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
-	// Display Results
-	// log.Println("response Status : ", resp.Status)
-	// log.Println("response Headers : ", resp.Header)
-	// log.Println("response Body : ", string(respBody))
 	var respData map[string]interface{}
 	if err := json.Unmarshal(respBody, &respData); err != nil {
 		log.Println("Error unmarshaling response", err)
 	}
-	log.Println(respData["status"])
 
 	// check for authentication true
 	if respData["status"].(map[string]interface{})["authenticated"] == true {
@@ -149,8 +142,6 @@ func factorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uriParts := strings.Split(r.RequestURI, "/")
-	// TODO: DEBUG
-	log.Println(uriParts)
 	factReq, _ := strconv.ParseInt(uriParts[2], 10, 64)
 	factors, err := factor(factReq)
 	resp := ExampleResponse{
