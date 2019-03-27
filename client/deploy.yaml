@@ -46,6 +46,7 @@ spec:
       labels:
         app: token-client
     spec:
+      serviceAccountName: token-client-test
       containers:
       - image: jpweber/tokenclient:0.2.3
         name: token-client
@@ -61,7 +62,7 @@ spec:
         volumeMounts:
         - mountPath: /var/run/secrets/tokens
           name: factor-token
-      serviceAccountName: token-client-test
+      
       volumes:
       - name: factor-token
         projected:
