@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: token-reviewer
+  namespace: token-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: role-tokenreview-binding
+  namespace: token-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: token-reviewer
+  namespace: token-demo
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/probe: "true"
+  labels:
+    app: token-server
+  name: test-service
+  namespace: token-demo
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: token-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: token-server
+  name: token-server
+  namespace: token-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: token-server
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: token-server
+    spec:
+      serviceAccountName: token-reviewer
+      containers:
+      - image: jpweber/tokenserver:0.2.6
+        name: token-server
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi

@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  name: token-demo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: token-client
+  name: token-client-test
+  namespace: token-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: token-client
+  name: token-client
+  namespace: token-demo
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: token-client
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: token-client
+  name: token-client
+  namespace: token-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: token-client
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: token-client
+    spec:
+      containers:
+      - image: jpweber/tokenclient:0.2.3
+        name: token-client
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /var/run/secrets/tokens
+          name: factor-token
+      serviceAccountName: token-client-test
+      volumes:
+      - name: factor-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              audience: factors
+              expirationSeconds: 600
+              path: factor-token
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: token-client
+  name: token-client
+  namespace: token-demo
+spec:
+  rules:
+  - host: token-client.k8s.weber.home
+    http:
+      paths:
+      - backend:
+          serviceName: token-client
+          servicePort: 8080
+        path: /
