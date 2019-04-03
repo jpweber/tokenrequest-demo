@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -99,7 +98,7 @@ func validateToken(svcToken, bearerToken string) bool {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("Failure : ", err)
+		log.Printf("Failure : %s", err)
 	}
 
 	// Read Response Body
@@ -107,7 +106,7 @@ func validateToken(svcToken, bearerToken string) bool {
 
 	var respData map[string]interface{}
 	if err := json.Unmarshal(respBody, &respData); err != nil {
-		log.Println("Error unmarshaling response", err)
+		log.Printf("Error unmarshaling response %s", err)
 	}
 
 	// check for authentication true
@@ -116,8 +115,12 @@ func validateToken(svcToken, bearerToken string) bool {
 		// look for us in the array of audiences
 		if validateAudiences(respData["status"].(map[string]interface{})["audiences"].([]interface{})) {
 			return true
+		} else {
+			log.Printf("Desired audience is not in the list of audiences")
 		}
 
+	} else {
+		log.Printf("authenticated field was false in token")
 	}
 
 	return false
@@ -150,7 +153,7 @@ func factorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	payload, err := json.Marshal(resp)
 	if err != nil {
-		log.Println("json marshaling error", err)
+		log.Printf("json marshaling error %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -161,7 +164,7 @@ func factorHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.Println("Starting application...")
+	log.Printf("Starting application...")
 
 	s := &http.Server{
 		Addr:         ":8080",
@@ -178,7 +181,7 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 
-	log.Println("Shutdown signal received, exiting...")
+	log.Printf("Shutdown signal received, exiting...")
 
 	s.Shutdown(context.Background())
 }

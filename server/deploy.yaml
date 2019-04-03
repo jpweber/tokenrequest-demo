@@ -57,7 +57,7 @@ spec:
     spec:
       serviceAccountName: token-reviewer
       containers:
-      - image: jpweber/tokenserver:0.2.7
+      - image: jpweber/tokenserver:0.2.8
         name: token-server
         ports:
         - containerPort: 8080
