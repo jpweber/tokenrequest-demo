@@ -81,6 +81,8 @@ metadata:
   namespace: token-demo
 spec:
   rules:
+    # unless you live in my house you probably should
+    # change this to a hostname you have access to
   - host: token-client.k8s.weber.home
     http:
       paths:
